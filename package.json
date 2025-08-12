@@ -1,0 +1,24 @@
+{
+  "name": "discordbot",
+  "type": "module",
+  "version": "3.0.0",
+  "description": "a simple bot using the slash command",
+  "main": "app.js",
+  "scripts": {
+    "start": "tsx app.ts"
+  },
+  "author": "Hatyáš Klimeš",
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/rest": "^2.0.1",
+    "discord-api-types": "^0.37.54",
+    "discord.js": "^14.15.1",
+    "dotenv": "^10.0.0",
+    "streamlogs": "^1.4.0",
+    "tsx": "^4.20.3",
+    "url-parse": "^1.5.10"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

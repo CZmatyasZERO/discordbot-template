@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "module": "nodenext",
+        "target": "es2024",
+        "noImplicitAny": false,
+        "outDir": "dist",
+        "rootDir": ".",
+        "sourceMap": false,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "strictPropertyInitialization": false,
+        "typeRoots": [
+            "node_modules/@types",
+            "node_modules/@discordjs/typings"
+        ],
+        "types": ["./types.d.ts"]
+    }
+}
