@@ -1,4 +1,4 @@
-import { Collection, Client, CommandInteraction, ApplicationCommandOptionData, PermissionsString, ModalSubmitInteraction, ButtonInteraction } from "discord.js";
+import { Collection, Client, ChatInputCommandInteraction, ApplicationCommandOptionData, PermissionsString, ModalSubmitInteraction, ButtonInteraction } from "discord.js";
 
 declare module "discord.js" {
   interface Client {
@@ -14,7 +14,7 @@ declare global {
         name: string;
         description: string;
         options?: ApplicationCommandOptionData[];
-        run: (interaction: CommandInteraction, client: Client) => void;
+        run: (interaction: ChatInputCommandInteraction, client: Client) => void;
         permissions?: PermissionsString;
         timeout?: number;
     }

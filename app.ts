@@ -1,7 +1,5 @@
-import { Client, GatewayIntentBits, EmbedBuilder, Collection, ModalSubmitInteraction, GuildMember, CommandInteraction, ButtonInteraction, ActivityType } from 'discord.js'
+import { Client, GatewayIntentBits, EmbedBuilder, Collection, ModalSubmitInteraction, GuildMember, ChatInputCommandInteraction, ButtonInteraction, ActivityType } from 'discord.js'
 import { defLog } from "streamlogs"
-import { REST } from "@discordjs/rest"
-import { Routes } from "discord-api-types/v10"
 import "dotenv/config"
 import fs from "fs"
 
@@ -12,32 +10,40 @@ const client = new Client({
         // Insert all intents here
     ]
 })
-const Timeout = new Set()
-client.slash = new Collection()
-client.modals = new Collection()
-const commands = []
+const Timeout = new Set<string>()
+client.slash = new Collection<string, Command>()
+client.modals = new Collection<string, Modal>()
+client.buttons = new Collection<string, Button>()
+const commands: Command[] = []
 
-fs.readdirSync("./commands/").forEach(async (item) => {
-    if(fs.lstatSync("./commands/" + item).isDirectory()) {
-        fs.readdirSync("./commands/" + item).map(async item2 => {
-            commands.push((await import("./commands/" + item + "/" + item2)).command)
-        })
-    } else {
-        commands.push((await import("./commands/" + item)).command)
-    }
-})
+if(fs.existsSync("./commands")) {
+    fs.readdirSync("./commands/").forEach(async (item) => {
+        if(fs.lstatSync("./commands/" + item).isDirectory()) {
+            fs.readdirSync("./commands/" + item).map(async item2 => {
+                commands.push((await import("./commands/" + item + "/" + item2)).command)
+            })
+        } else {
+            commands.push((await import("./commands/" + item)).command)
+        }
+    })
+}
 
-fs.readdirSync("./modals/").forEach(async (item) => {
-    const modal = ((await import("./modals/" + item)).modal)
-    client.modals.set(modal.name, modal)
-    defLog.info(modal.name + " loaded!", "modal-loader")
-})
+if(fs.existsSync("./modals")) {
+    fs.readdirSync("./modals/").forEach(async (item) => {
+        const modal = ((await import("./modals/" + item)).modal)
+        client.modals.set(modal.name, modal)
+        defLog.info(modal.name + " loaded!", "modal-loader")
+    })
+}
 
-fs.readdirSync("./buttons/").forEach(async (item) => {
-    const button = ((await import("./buttons/" + item)).button)
-    client.buttons.set(button.name, button)
-    defLog.info(button.name + " loaded!", "button-loader")
-})
+
+if(fs.existsSync("./buttons")) {
+    fs.readdirSync("./buttons/").forEach(async (item) => {
+        const button = ((await import("./buttons/" + item)).button)
+        client.buttons.set(button.name, button)
+        defLog.info(button.name + " loaded!", "button-loader")
+    })
+}
 
 
 setTimeout(() => {
@@ -48,19 +54,16 @@ setTimeout(() => {
         }
     })
 
-    const rest = new REST().setToken(process.env.token);
-
-    (async () => {
-        try {
-            await rest.put(
-                Routes.applicationCommands(process.env.botID),
-                { body: commands }
-            )
-            defLog.info("Successfully reloaded application (/) commands.", "cmd-loader")
-        } catch (error) {
-            defLog.error(error, "cmd-loader")
+    client.application.commands.set(commands.map(cmd => {
+        return {
+            name: cmd.name,
+            description: cmd.description,
+            options: cmd.options || [],
+            defaultMemberPermissions: cmd.permissions
         }
-    })();
+    }))
+
+    defLog.info("Loaded " + commands.length + " commands!", "cmd-loader")
 }, 2000)
 
 
@@ -83,9 +86,10 @@ client.on("interactionCreate", async (interaction) => {
         const button = client.buttons.get(interaction.customId)
         button.run(interaction, client)
     } else if (interaction.isCommand() || interaction.isContextMenuCommand()) {
-        interaction as CommandInteraction
         if (!client.slash.has(interaction.commandName)) return
         if (!interaction.guild) return
+        if (!interaction.isChatInputCommand()) return
+        interaction as ChatInputCommandInteraction
         commandrun(interaction.commandName, interaction)
     } else if (interaction.isModalSubmit()) {
         interaction as ModalSubmitInteraction
@@ -94,7 +98,7 @@ client.on("interactionCreate", async (interaction) => {
         modal.run(interaction, client)
     }
 
-    async function commandrun(name, interaction: CommandInteraction) {
+    async function commandrun(name, interaction: ChatInputCommandInteraction) {
         const command = client.slash.get(name)
         const member = interaction.member as GuildMember
         try {
