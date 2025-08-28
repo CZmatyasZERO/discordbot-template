@@ -73,7 +73,7 @@ setTimeout(() => {
 
 
 
-client.on("ready", () => {
+client.on("clientReady", () => {
     defLog.info(`Logged in as ${client.user.tag}!`, "App")
     client.user.setActivity({name: "Hello!", type: ActivityType.Playing})
 })
